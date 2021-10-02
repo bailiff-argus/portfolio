@@ -36,10 +36,13 @@ def extract_name(rest) -> str:
 
 
 def extract_subway_station(rest) -> str:
-    return rest.findAll(
-        lambda tag: tag.name == "li" and \
-        tag.get('class') == ["search-place-card__info-item"]
-    )[0].findAll('span')[0].text
+    try:
+        return rest.findAll(
+            lambda tag: tag.name == "li" and \
+            tag.get('class') == ["search-place-card__info-item"]
+        )[0].findAll('span')[0].text
+    except IndexError: # no subway station nearby
+        return None
 
 
 def extract_and_adjust_score(rest) -> float:
@@ -81,14 +84,8 @@ def parse_sublist(sublist) -> pd.DataFrame:
 
     for i in range(len(rests)):
         rest_name: str = extract_name(rests[i])
-
-        try:
-            rest_subway_st: str = extract_subway_station(rests[i])
-        except IndexError: # prevents an error for restaraunts with no subway stations stated
-            continue
-
+        rest_subway_st: str = extract_subway_station(rests[i])
         rest_adjusted_score: float = extract_and_adjust_score(rests[i])
-
         rest_avg_tab = extract_average_tab(rests[i])
 
         # assuming food quality scales almost linearly with score,
@@ -133,7 +130,7 @@ def main() -> None:
     # normalize the value scores, so that the highest is 100
     top_restaraunts['value'] = round(top_restaraunts['value'] * 100 / top_restaraunts['value'].max(), 0)
 
-    print(top_restaraunts.sort_values("value", ascending=False))
+    print(top_restaraunts.sort_values("value", ascending=False).set_index("name"))
 
 
 if __name__ == "__main__":
