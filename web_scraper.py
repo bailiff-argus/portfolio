@@ -5,8 +5,11 @@ import numpy as np
 
 """
 
-This script aims to pull names, nearest subway stations, scores, and types of the highest
-ranked restaraunts in Moscow, source: restoclub.ru
+This program aims to pull data about the best restaraunts in Moscow,
+calculate their value -- the "bang for the buck" -- and return a dataframe
+with restaraunts sorted by value from highest to lowest.
+
+Source: restoclub.ru
 
 """
 
@@ -88,9 +91,11 @@ def parse_sublist(sublist) -> pd.DataFrame:
 
         rest_avg_tab = extract_average_tab(rests[i])
 
-        # assuming food quality scales linearly with score,
+        # assuming food quality scales almost linearly with score,
         # how many score points per unit of money do you get?
-        rest_value: float = rest_adjusted_score / rest_avg_tab
+        # since the score range is very tight, we'll adjust it for this
+        # calculation
+        rest_value: float = (rest_adjusted_score * 3 - 20) / rest_avg_tab
 
         rest_entry: dict = {
             'name': rest_name,
