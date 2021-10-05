@@ -1,3 +1,3 @@
-# Portfolio
+# Study
 
-In reality, this is a group of very basic projects meant to make the recruiter somewhat familiar with my coding style.
+This repo will contain some simple projects that I work(ed) on to learn something
