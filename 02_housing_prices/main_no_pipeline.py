@@ -1,4 +1,4 @@
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_percentage_error
@@ -138,13 +138,18 @@ def main() -> None:
 
     X_train, X_valid, y_train, y_valid = split_and_preprocess_data(X, y)
 
-    model = RandomForestRegressor(n_estimators = 500, random_state = 0)
-    model.fit(X_train, y_train)
+    model = RandomForestRegressor(n_estimators = 100, random_state = 0)
 
-    predictions = model.predict(X_valid)
-    mae = mean_absolute_percentage_error(y_valid, predictions)
+    X_full = pd.concat([X_train, X_valid], axis = 0)
 
-    print(round(mae, 5))
+    scores = -1 * cross_val_score(model, X_full, y, cv = 5, scoring = 'neg_mean_absolute_error')
+
+    print(scores)
+
+    # model.fit(X_train, y_train)
+
+    # predictions = model.predict(X_valid)
+    # mape = mean_absolute_percentage_error(y_valid, predictions)
 
 
 if __name__ == "__main__":
