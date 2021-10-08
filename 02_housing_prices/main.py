@@ -26,43 +26,48 @@ def main() -> None:
         X, y, random_state = 0, test_size = 0.2, train_size = 0.8,
     )
 
-    cat_cols_locard = [col_name for col_name in X_train.columns
-                       if  X_train[col_name].nunique() < CARDINALITY_THRESHOLD
-                       and X_train[col_name].dtype == 'object']
+
+    cols = {
+        'numerical':   [col_name for col_name in X_train.columns
+                        if  X_train[col_name].dtype in ('int64', 'float64')],
+
+        'categorical': [col_name for col_name in X_train.columns
+                        if  X_train[col_name].dtype == 'object'
+                        and X_train[col_name].nunique() <= CARDINALITY_THRESHOLD],
+    }
+
+    transformers = {
+        'numerical':   SimpleImputer(strategy = 'constant'),
+
+        'categorical': Pipeline(steps = [
+            ('impute', SimpleImputer(strategy = 'most_frequent')),
+            ('encode', OneHotEncoder(handle_unknown = 'ignore')),
+        ]),
+    }
 
 
-    num_cols = [col_name for col_name in X_train.columns
-                if  X_train[col_name].dtype in ['int64', 'float64']]
-
-
-    num_transformer = SimpleImputer(strategy = 'constant')
-
-    cat_locard_transformer = Pipeline(steps = [
-        ('imputer', SimpleImputer(strategy = 'most_frequent')),
-        ('onehot', OneHotEncoder(handle_unknown = 'ignore')),
+    preprocessor = ColumnTransformer(transformers = [
+        ('num', transformers['numerical'],   cols['numerical']),
+        ('cat', transformers['categorical'], cols['categorical']),
     ])
 
-    preprocessor_transformation = ColumnTransformer(transformers = [
-        ('num', num_transformer, num_cols),
-        ('cat_locard', cat_locard_transformer, cat_cols_locard),
-    ])
 
-    preprocessor = Pipeline(steps = [
-        ('preprocessor', preprocessor_transformation),
+    preprocessor_pipe = Pipeline(steps = [
+        ('preprocessor', preprocessor),
     ])
 
 
     model = XGBRegressor(n_estimators = 1000, learning_rate = 0.05, random_state = 0)
 
     model_pipeline = Pipeline(steps = [
-        ('preprocessor', preprocessor_transformation),
+        ('preprocessor', preprocessor),
         ('model', model),
     ])
 
 
     # pipeline doesn't process the eval_set
     X_valid_eval = X_valid.copy()
-    X_valid_eval = preprocessor.fit(X_train, y_train).transform(X_valid_eval)
+    X_valid_eval = preprocessor_pipe.fit(X_train, y_train).transform(X_valid_eval)
 
 
     model_pipeline.fit(
