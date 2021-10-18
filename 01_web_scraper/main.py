@@ -5,9 +5,9 @@ import numpy as np
 
 """
 
-This program aims to pull data about the best restaraunts in Moscow,
+This program aims to pull data about the best restaurants in Moscow,
 calculate their value -- the "bang for the buck" -- and return a dataframe
-with restaraunts sorted by value from highest to lowest.
+with restaurants sorted by value from highest to lowest.
 
 Source: restoclub.ru
 
@@ -51,7 +51,7 @@ def extract_and_adjust_score(rest) -> float:
     )[0].text)
 
     # low amounts of reviews can introduce bias. To combat that, a 10.0
-    # and a 1.0 reviews are added for any restaraunt
+    # and a 1.0 reviews are added for any restaurant
 
     reviews: str = rest.findAll(
         "a", attrs = {'class': "search-place-rating__reviews"}
@@ -111,7 +111,7 @@ def parse_sublist(sublist) -> pd.DataFrame:
 
 
 def main() -> None:
-    top_restaraunts = pd.DataFrame(columns = ('name', 'type', 'score', 'average_tab', 'value', 'subway_st'))
+    top_restaurants = pd.DataFrame(columns = ('name', 'type', 'score', 'average_tab', 'value', 'subway_st'))
 
     raw_webpage_contents: bytes = pull_data_from_page()
     soup = BeautifulSoup(raw_webpage_contents, 'html.parser')
@@ -120,17 +120,17 @@ def main() -> None:
 
     for j in range(len(rest_lists)):
         new_entry = parse_sublist(rest_lists[j])
-        top_restaraunts = pd.concat([top_restaraunts, new_entry], ignore_index=True)
+        top_restaurants = pd.concat([top_restaurants, new_entry], ignore_index=True)
 
-    # get rid of restaraunts with data missing
-    top_restaraunts = top_restaraunts.dropna()
+    # get rid of restaurants with data missing
+    top_restaurants = top_restaurants.dropna()
 
-    assert top_restaraunts is not None
+    assert top_restaurants is not None
 
     # normalize the value scores, so that the highest is 100
-    top_restaraunts['value'] = round(top_restaraunts['value'] * 100 / top_restaraunts['value'].max(), 0)
+    top_restaurants['value'] = round(top_restaurants['value'] * 100 / top_restaurants['value'].max(), 0)
 
-    print(top_restaraunts.sort_values("value", ascending=False).set_index("name"))
+    print(top_restaurants.sort_values("value", ascending=False).set_index("name"))
 
 
 if __name__ == "__main__":
